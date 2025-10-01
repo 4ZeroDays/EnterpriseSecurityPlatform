@@ -4,27 +4,27 @@ import json
 import logging
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 from contextlib import asynccontextmanager
 import asyncpg
 import redis.asyncio as redis
 from redis.asyncio.connection import ConnectionPool
 
-# ML libraries
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import IsolationForest
 import joblib
 import numpy as np
 
-# Configure structured logging
+
 logging.basicConfig(
     level=logging.INFO,
     format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "service": "detection-engine", "message": "%(message)s"}'
 )
 logger = logging.getLogger(__name__)
 
-# Configuration with validation
+
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/security_platform")
 REDIS_MAX_CONNECTIONS = int(os.getenv("REDIS_MAX_CONNECTIONS", "50"))
@@ -32,30 +32,32 @@ DB_POOL_MIN = int(os.getenv("DB_POOL_MIN", "5"))
 DB_POOL_MAX = int(os.getenv("DB_POOL_MAX", "20"))
 QUEUE_TIMEOUT = int(os.getenv("QUEUE_TIMEOUT", "5"))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "10"))
-MAX_LOG_SIZE = int(os.getenv("MAX_LOG_SIZE", "100000"))  # 100KB limit
+MAX_LOG_SIZE = int(os.getenv("MAX_LOG_SIZE", "100000"))  
 ALERT_THRESHOLD = float(os.getenv("ALERT_THRESHOLD", "70.0"))
 
-# Load ML models with error handling
-def load_ml_models() -> tuple[Optional[IsolationForest], Optional[TfidfVectorizer]]:
-    """Load pre-trained ML models with comprehensive error handling."""
+def load_ml_models():
     try:
         model_path = os.getenv("MODEL_PATH", "models")
-        anomaly_model = joblib.load(f"{model_path}/anomaly_model.pkl")
+        
+        # Unsupervised model
+        isolation_model = joblib.load(f"{model_path}/anomaly_model.pkl")
+        
+        # Supervised model
+        random_forest_model = joblib.load(f"{model_path}/random_forest_model.pkl")
+        
         vectorizer = joblib.load(f"{model_path}/tfidf_vectorizer.pkl")
         logger.info("✅ ML models loaded successfully")
-        return anomaly_model, vectorizer
-    except FileNotFoundError:
-        logger.warning("ML model files not found. Running in rule-based mode only.")
-        return None, None
+        return isolation_model, random_forest_model, vectorizer
     except Exception as e:
-        logger.error(f"Failed to load ML models: {e}", exc_info=True)
-        return None, None
+        logger.warning(f"ML models not loaded: {e}")
+        return None, None, None
 
-anomaly_model, vectorizer = load_ml_models()
+isolation_model, random_forest_model, vectorizer = load_ml_models()
+
 
 
 class ThreatDetectionEngine:
-    """Core detection engine with rule-based and ML-based analysis."""
+    
     
     def __init__(self):
         self.rules = self._load_detection_rules()
@@ -64,7 +66,7 @@ class ThreatDetectionEngine:
         logger.info(f"Detection engine initialized with {len(self.rules)} rules, ML enabled={self.ml_enabled}")
     
     def _load_detection_rules(self) -> List[Dict[str, Any]]:
-        """Load detection rules with enhanced patterns."""
+        
         return [
             {
                 "id": "SQL_INJECTION",
@@ -125,8 +127,8 @@ class ThreatDetectionEngine:
         ]
     
     async def analyze(self, log_data: str, source_ip: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze log data for threats using rules and ML."""
-        start_time = datetime.utcnow()
+        
+        start_time = datetime.now(timezone.utc)
         self._stats["total_analyzed"] += 1
         
         # Input validation
@@ -154,7 +156,7 @@ class ThreatDetectionEngine:
             ml_risk_score = await self._ml_anomaly_detection(log_data, source_ip)
             total_score += ml_risk_score * 0.5
         
-        # Calculate final risk score
+        # Calculate final risk score (normalized to 0-100)
         risk_score = min(total_score, 100.0)
         
         # Determine threat classification
@@ -166,7 +168,7 @@ class ThreatDetectionEngine:
         # Generate contextual recommendations
         recommendations = self._generate_recommendations(risk_score, matched_rules, metadata)
         
-        processing_time = (datetime.utcnow() - start_time).total_seconds()
+        processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
         
         return {
             "risk_score": round(risk_score, 2),
@@ -182,24 +184,30 @@ class ThreatDetectionEngine:
         }
     
     async def _ml_anomaly_detection(self, log_data: str, source_ip: str) -> float:
-        """Perform ML-based anomaly detection."""
         try:
-            # Run in executor to avoid blocking
             loop = asyncio.get_event_loop()
             X = await loop.run_in_executor(None, vectorizer.transform, [log_data])
-            anomaly_score = await loop.run_in_executor(None, anomaly_model.decision_function, X)
-            
-            # Convert to 0-100 risk scale
-            ml_risk_score = max(min((1 - anomaly_score[0]) * 100, 100.0), 0.0)
-            logger.info(f"ML anomaly score={ml_risk_score:.2f} for IP {source_ip}")
-            return ml_risk_score
-        except Exception as e:
+        
+            # Isolation Forest anomaly score
+            iso_score = await loop.run_in_executor(None, isolation_model.decision_function, X)
+            iso_risk = max(min((1 - iso_score[0]) * 100, 100.0), 0.0)
+        
+            # Random Forest prediction (0=benign, 1=malicious)
+            rf_pred = await loop.run_in_executor(None, random_forest_model.predict, X)
+            rf_risk = 100.0 if rf_pred[0] == 1 else 0.0
+        
+            # Combine scores (weighted average or max)
+            combined_risk = max(iso_risk, rf_risk)  # strict approach
+            logger.info(f"ML combined score={combined_risk:.2f} for IP {source_ip}")
+           return combined_risk
+    
+       except Exception as e:
             self._stats["ml_errors"] += 1
             logger.warning(f"ML analysis failed for IP {source_ip}: {e}")
             return 0.0
-    
+
     def _classify_threat(self, matched_rules: List[Dict], risk_score: float) -> tuple[str, str, float]:
-        """Classify threat type, severity, and confidence."""
+        
         if not matched_rules:
             return "BENIGN", "LOW", 0.15
         
@@ -217,7 +225,7 @@ class ThreatDetectionEngine:
         return threat_type, severity, confidence
     
     def _generate_recommendations(self, risk_score: float, matched_rules: List[Dict], metadata: Dict[str, Any]) -> List[str]:
-        """Generate contextual security recommendations."""
+        
         recommendations = []
         
         # Risk-based recommendations
@@ -275,9 +283,9 @@ class ThreatDetectionEngine:
             ) * 100
         }
 
--
+
 class DetectionServiceWorker:
-    #Async worker for processing threat detection jobs
+    """Async worker for processing threat detection jobs."""
     
     def __init__(self):
         self.redis_pool: Optional[ConnectionPool] = None
@@ -288,7 +296,7 @@ class DetectionServiceWorker:
         self._health_check_task = None
     
     async def start(self):
-        #Initialize connections and start processing
+        """Initialize connections and start processing."""
         logger.info("🚀 Detection Service starting up...")
         
         # Initialize Redis with connection pool
@@ -328,7 +336,7 @@ class DetectionServiceWorker:
         await self.process_queue()
     
     async def _initialize_db_schema(self):
-        """Ensure database schema exists."""
+        
         if not self.db_pool:
             return
         
@@ -361,7 +369,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to initialize schema: {e}")
     
     async def process_queue(self):
-        """Main queue processing loop with batch support."""
+        
         logger.info("👂 Listening for detection jobs...")
         
         while self.running:
@@ -423,7 +431,7 @@ class DetectionServiceWorker:
             await self._enqueue_retry(job)
     
     async def _check_repeat_offender(self, source_ip: str) -> int:
-        """Check if IP is a repeat offender."""
+       
         try:
             # Count threats from this IP in last 24 hours
             pattern = f"threat:*:{source_ip}"
@@ -434,7 +442,7 @@ class DetectionServiceWorker:
             return 0
     
     async def _store_in_db(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        #Store detection result in PostgreSQL.
+        """Store detection result in PostgreSQL."""
         if not self.db_pool:
             return
         
@@ -457,7 +465,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to store result in DB: {e}")
     
     async def _cache_result(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        """Cache detection result in Redis."""
+        
         try:
             cache_data = {"threat_id": threat_id, "source_ip": source_ip, **result}
             cache_key = f"threat:{threat_id}:{source_ip}"
@@ -466,7 +474,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to cache result: {e}")
     
     async def publish_alert(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        #Publish high-severity alert to Redis pub/sub.
+        
         alert = {
             "alert_id": threat_id,
             "source_ip": source_ip,
@@ -485,7 +493,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to publish alert: {e}")
     
     async def _enqueue_retry(self, job: Dict[str, Any]):
-        """Enqueue failed job for retry."""
+       
         try:
             retry_count = job.get("retry_count", 0)
             if retry_count < 3:
@@ -496,7 +504,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to enqueue retry: {e}")
     
     async def _periodic_health_check(self):
-        """Periodic health check and metrics reporting."""
+        
         while self.running:
             try:
                 await asyncio.sleep(60)  # Check every minute
@@ -541,7 +549,7 @@ class DetectionServiceWorker:
 
 
 async def main():
-    #Main application entry point
+    """Main application entry point."""
     worker = DetectionServiceWorker()
     
     try:
