@@ -1,5 +1,4 @@
-# Detection Service - Microservice for Threat Analysis (ML-integrated)
-# Enhanced version with improvements for production readiness
+
 import asyncio
 import json
 import logging
@@ -54,9 +53,7 @@ def load_ml_models() -> tuple[Optional[IsolationForest], Optional[TfidfVectorize
 
 anomaly_model, vectorizer = load_ml_models()
 
-# --------------------------
-# Detection Engine
-# --------------------------
+
 class ThreatDetectionEngine:
     """Core detection engine with rule-based and ML-based analysis."""
     
@@ -157,7 +154,7 @@ class ThreatDetectionEngine:
             ml_risk_score = await self._ml_anomaly_detection(log_data, source_ip)
             total_score += ml_risk_score * 0.5
         
-        # Calculate final risk score (normalized to 0-100)
+        # Calculate final risk score
         risk_score = min(total_score, 100.0)
         
         # Determine threat classification
@@ -192,7 +189,7 @@ class ThreatDetectionEngine:
             X = await loop.run_in_executor(None, vectorizer.transform, [log_data])
             anomaly_score = await loop.run_in_executor(None, anomaly_model.decision_function, X)
             
-            # Convert to 0-100 risk scale (lower anomaly_score = more anomalous)
+            # Convert to 0-100 risk scale
             ml_risk_score = max(min((1 - anomaly_score[0]) * 100, 100.0), 0.0)
             logger.info(f"ML anomaly score={ml_risk_score:.2f} for IP {source_ip}")
             return ml_risk_score
@@ -278,11 +275,9 @@ class ThreatDetectionEngine:
             ) * 100
         }
 
-# --------------------------
-# Detection Service Worker
-# --------------------------
+-
 class DetectionServiceWorker:
-    """Async worker for processing threat detection jobs."""
+    #Async worker for processing threat detection jobs
     
     def __init__(self):
         self.redis_pool: Optional[ConnectionPool] = None
@@ -293,7 +288,7 @@ class DetectionServiceWorker:
         self._health_check_task = None
     
     async def start(self):
-        """Initialize connections and start processing."""
+        #Initialize connections and start processing
         logger.info("🚀 Detection Service starting up...")
         
         # Initialize Redis with connection pool
@@ -439,7 +434,7 @@ class DetectionServiceWorker:
             return 0
     
     async def _store_in_db(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        """Store detection result in PostgreSQL."""
+        #Store detection result in PostgreSQL.
         if not self.db_pool:
             return
         
@@ -471,7 +466,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to cache result: {e}")
     
     async def publish_alert(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        """Publish high-severity alert to Redis pub/sub."""
+        #Publish high-severity alert to Redis pub/sub.
         alert = {
             "alert_id": threat_id,
             "source_ip": source_ip,
@@ -546,7 +541,7 @@ class DetectionServiceWorker:
 
 
 async def main():
-    """Main application entry point."""
+    #Main application entry point
     worker = DetectionServiceWorker()
     
     try:
