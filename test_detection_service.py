@@ -1,5 +1,4 @@
-# Test Suite for Detection Service
-# Run with: pytest test_detection_service.py -v
+
 import pytest
 import asyncio
 import json
@@ -9,16 +8,13 @@ from unittest.mock import Mock, AsyncMock, patch, MagicMock
 import asyncpg
 import redis.asyncio as redis
 
-# Import the service (adjust import path as needed)
 from detection_service import (
     ThreatDetectionEngine,
     DetectionServiceWorker,
     load_ml_models
 )
 
-# --------------------------
-# Unit Tests - Detection Engine
-# --------------------------
+
 class TestThreatDetectionEngine:
     """Test the core detection logic."""
     
@@ -116,15 +112,13 @@ class TestThreatDetectionEngine:
         assert "threats_detected" in stats
         assert "threat_detection_rate" in stats
 
-# --------------------------
-# Integration Tests - Worker
-# --------------------------
+
 class TestDetectionServiceWorker:
     """Test the service worker with mocked dependencies."""
     
     @pytest.fixture
     async def worker(self):
-        """Create a worker instance."""
+   
         worker = DetectionServiceWorker()
         yield worker
         # Cleanup
@@ -133,7 +127,7 @@ class TestDetectionServiceWorker:
     
     @pytest.mark.asyncio
     async def test_process_detection_job(self, worker):
-        """Test processing a single detection job."""
+ 
         # Mock dependencies
         worker.redis_client = AsyncMock()
         worker.db_pool = AsyncMock()
@@ -183,14 +177,9 @@ class TestDetectionServiceWorker:
         call_args = worker.redis_client.publish.call_args
         assert call_args[0][0] == "security_alerts"
 
-# --------------------------
-# Manual Testing Script
-# --------------------------
+
 async def manual_test_full_flow():
-    """
-    Manual test to verify end-to-end flow.
-    Requires Redis and PostgreSQL running.
-    """
+
     print("🧪 Starting Manual End-to-End Test")
     print("=" * 60)
     
@@ -262,9 +251,7 @@ async def manual_test_full_flow():
     await redis_client.close()
     print("\n" + "=" * 60)
 
-# --------------------------
-# Quick Test - No Dependencies
-# --------------------------
+
 async def quick_test_detection_only():
     """Quick test of detection engine without external dependencies."""
     print("🧪 Quick Detection Engine Test (No Dependencies)")
@@ -302,9 +289,7 @@ async def quick_test_detection_only():
     print(f"   Detection Rate: {stats['threat_detection_rate']:.1f}%")
     print("\n" + "=" * 60)
 
-# --------------------------
-# Performance Test
-# --------------------------
+
 async def performance_test():
     """Test detection engine performance."""
     print("🧪 Performance Test")
@@ -335,9 +320,7 @@ async def performance_test():
     print(f"   Throughput: {iterations/duration:.0f} detections/second")
     print("\n" + "=" * 60)
 
-# --------------------------
-# Run Tests
-# --------------------------
+
 if __name__ == "__main__":
     import sys
     
