@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""
-Advanced ML Model Training for Threat Detection
-Uses larger dataset and multiple model types for comparison
-"""
+
+
+# ML Model Training for Threat Detection :)
+
 
 import os
 import joblib
