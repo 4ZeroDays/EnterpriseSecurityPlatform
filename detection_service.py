@@ -142,6 +142,10 @@ class ThreatDetectionEngine:
         self.ml_enabled: bool = (isolation_model is not None or random_forest_model is not None) and vectorizer is not None
         self._stats = {"total_analyzed": 0, "threats_detected": 0, "ml_errors": 0}
         logger.info(f"Detection engine initialized with {len(self.rules)} rules, ML enabled={self.ml_enabled}")
+        self.pool = None
+    def init_pool(self):
+        global DATABASE_URL
+        self.pool = await asyncpg.create_pool(DATABASE_URL) 
     
     def _load_detection_rules(self) -> List[Dict[str, Any]]:
         """Load detection rules with enhanced patterns."""
