@@ -37,31 +37,7 @@ try:
     from services.detection_service import analyze, threat_db
 except Exception as e:
     logger.warning(f"Detection module import failed: {e}")
-    # Create mock objects for development
-    class MockThreatDB:
-        class Pool:
-            def acquire(self):
-                return self
-            async def __aenter__(self):
-                return self
-            async def __aexit__(self, *args):
-                pass
-            async def execute(self, query):
-                return None
-            async def fetch(self, query, *args):
-                return []
-        pool = Pool()
-    
-    threat_db = MockThreatDB()
-    
-    def analyze_log(log_data):
-        return {
-            'score': 45.0,
-            'threat': 'unknown',
-            'severity': 'LOW',
-            'confidence': 0.5
-        }
-        
+
 
 	    
 	    
