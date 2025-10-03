@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""
-Train ML Models for Threat Detection
-Creates anomaly_model.pkl and tfidf_vectorizer.pkl in models/ directory
-"""
+
+#Train ML Models for Threat Detection :)
+
 
 import os
 import joblib
@@ -17,11 +16,9 @@ print("=" * 60)
 # Create models directory
 os.makedirs("models", exist_ok=True)
 
-# ============================================
-# Training Data - Real Security Logs
-# ============================================
 
-# BENIGN traffic samples (normal, safe requests)
+
+# BENIGN traffic samples (
 benign_logs = [
     "GET /api/health HTTP/1.1 User-Agent: Mozilla/5.0",
     "POST /api/login HTTP/1.1 username=john password=hashed_value",
@@ -45,7 +42,7 @@ benign_logs = [
     "GET /robots.txt HTTP/1.1",
 ]
 
-# MALICIOUS traffic samples (attacks)
+# MALICIOUS traffic sample
 malicious_logs = [
     # SQL Injection
     "GET /api/users?id=1' OR '1'='1'-- HTTP/1.1",
@@ -101,17 +98,15 @@ print(f"   Benign samples: {len(benign_logs)}")
 print(f"   Malicious samples: {len(malicious_logs)}")
 print(f"   Total samples: {len(all_logs)}")
 
-# ============================================
-# Step 1: Train TF-IDF Vectorizer
-# ============================================
+
 print("\n🔧 Training TF-IDF Vectorizer...")
 
 vectorizer = TfidfVectorizer(
-    max_features=500,           # Top 500 most important features
-    ngram_range=(1, 3),         # Use 1-3 word combinations
-    analyzer='char',            # Character-level analysis (better for detecting patterns)
-    min_df=1,                   # Minimum document frequency
-    max_df=0.9,                 # Maximum document frequency
+    max_features=500,          
+    ngram_range=(1, 3),         
+    analyzer='char',            
+    min_df=1,                  
+    max_df=0.9,                 
     lowercase=True,
     strip_accents='unicode',
     token_pattern=r'\b\w+\b'
@@ -130,44 +125,35 @@ vectorizer_path = "models/tfidf_vectorizer.pkl"
 joblib.dump(vectorizer, vectorizer_path)
 print(f"   ✅ Saved to: {vectorizer_path}")
 
-# ============================================
-# Step 2: Train Anomaly Detection Model
-# ============================================
+
 print("\n🔧 Training Isolation Forest (Anomaly Detection)...")
 
-# Isolation Forest is great for detecting outliers/anomalies
-# It works well even with small datasets
+
 model = IsolationForest(
-    contamination=0.3,          # Expect 30% of data to be anomalies
-    n_estimators=100,           # Number of trees
-    max_samples='auto',         # Samples per tree
-    random_state=42,            # Reproducibility
-    n_jobs=-1                   # Use all CPU cores
+    contamination=0.3,          
+    n_estimators=100,           
+    max_samples='auto',         
+    random_state=42,            
+    n_jobs=-1                  
 )
 
-# Train on the vectorized data
-# Note: We're using unsupervised learning here, so we don't need labels
-# But we know what's malicious for evaluation
+
 model.fit(X)
 print(f"   ✅ Model trained with {model.n_estimators} trees")
 
-# Save model
+
 model_path = "models/anomaly_model.pkl"
 joblib.dump(model, model_path)
 print(f"   ✅ Saved to: {model_path}")
 
-# ============================================
-# Step 3: Test Model Performance
-# ============================================
+
 print("\n🧪 Testing Model Performance...")
 
-# Predict anomaly scores (lower = more anomalous)
+# Predict anomaly scores 
 scores = model.decision_function(X)
-predictions = model.predict(X)  # -1 = anomaly, 1 = normal
+predictions = model.predict(X) 
 
-# Calculate accuracy
-# prediction: -1 = anomaly (malicious), 1 = normal (benign)
-# Convert to 0/1 for comparison: -1 -> 1, 1 -> 0
+
 predicted_labels = [1 if p == -1 else 0 for p in predictions]
 accuracy = sum(p == l for p, l in zip(predicted_labels, labels)) / len(labels)
 
@@ -193,9 +179,7 @@ for name, payload in test_cases:
     
     print(f"   {status} {name:20s} | Risk: {risk_score:5.1f}")
 
-# ============================================
-# Step 4: Model Statistics
-# ============================================
+
 print("\n📊 Model Statistics:")
 print(f"   Model type: Isolation Forest")
 print(f"   Feature dimension: {X.shape[1]}")
@@ -203,11 +187,11 @@ print(f"   Training samples: {X.shape[0]}")
 print(f"   Contamination rate: 30%")
 print(f"   Number of estimators: 100")
 
-# Show feature importance (top features that indicate threats)
+
 print("\n🔍 Top Features Indicating Threats:")
-# Get the most discriminative features
-malicious_X = X[len(benign_logs):]  # Only malicious samples
-benign_X = X[:len(benign_logs)]     # Only benign samples
+
+malicious_X = X[len(benign_logs):]  
+benign_X = X[:len(benign_logs)]    
 
 # Calculate mean TF-IDF scores for each class
 malicious_mean = np.asarray(malicious_X.mean(axis=0)).flatten()
