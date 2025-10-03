@@ -17,6 +17,11 @@ import jwt
 import logging
 import sys
 from typing_extensions import Annotated
+import subprocess
+import smtplib
+from email.message import EmailMessage
+import ssl 
+import os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,7 +34,7 @@ if root not in sys.path:
     sys.path.insert(0, root)
 
 try:
-    from src.detection import analyze_log, threat_db
+    from services.detection_service import analyze, threat_db
 except Exception as e:
     logger.warning(f"Detection module import failed: {e}")
     # Create mock objects for development
@@ -56,6 +61,47 @@ except Exception as e:
             'severity': 'LOW',
             'confidence': 0.5
         }
+        
+
+	    
+	    
+def send_email(subject, body, to_email):
+    from_email = os.getenv("EMAIL", "example@gmail.com")
+    password = os.getenv("EMAIL_PASSWORD", "example123")
+	
+    message = EmailMessage()
+    message['Subject'] = subject
+    message['From'] = from_email
+    message['To'] = to_email
+    message.set_content(body)
+	
+    try:
+        context = sll.create_Default_context()
+        with smtplib.SMTP_SLL('smtp.gmail.com', 465, context=context) as smtp:
+            smtp.login(from_email, password)
+            smtp.send_message(message)
+            logger.info("SENT EMAIL SUCESSFULLY")
+    except smtplib.SMTPAuthenticationError as e:
+        logger.info(f"Failed to authenticate. Please check your email, password, and security settings\nError: {e}")
+    except Exception as e:
+        logger.info(f"Failed to send email error: {e}")
+        
+
+
+def ipset_create_set(set_name="blocked_ips"):
+    subprocess.run(["ipset", "create", set_name, "hash:ip"], check=False)
+
+def ipset_add(ip: str, set_name="blocked_ips"):
+
+    subprocess.run(["ipset", "add", set_name, ip, "-exist"], check=False)
+
+    subprocess.run(["iptables", "-I", "INPUT", "-m", "set", "--match-set", set_name, "src", "-j", "DROP"], check=False)
+    logger.warning(f"ipset add {ip}")
+
+def ipset_remove(ip: str, set_name="blocked_ips"):
+    subprocess.run(["ipset", "del", set_name, ip], check=False)
+    logger.info(f"ipset remove {ip}")
+		
 
 jwt_secret = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 jwt_algorithm = 'HS256'
@@ -63,6 +109,10 @@ jwt_expiration_hours = 24
 
 redis_client = None
 security = HTTPBearer()
+
+ipset_create_set("blocked_ips")
+
+ 
 
 app = FastAPI(
     title='Enterprise Security Platform API',
@@ -187,6 +237,7 @@ async def shutdown():
     logger.info("API Gateway shutdown")
 
 
+
 @app.get("/", tags=['System'])
 async def root():
     return {
@@ -265,7 +316,7 @@ async def analyze_threat(request: ThreatAnalysisRequest, user_data: dict = Depen
     threat_id = str(uuid.uuid4())
     start_time = time.time()
     
-    result = analyze_log(request.log_data)
+    result = analyze(request.log_data)
     if result is None:
         logger.warning("No log analysis result")
         result = {}
@@ -283,6 +334,15 @@ async def analyze_threat(request: ThreatAnalysisRequest, user_data: dict = Depen
             'Check for lateral movement',
             'Review user access logs'
         ]
+        source_ip = result.get('source_ip')
+        if source_ip:
+            ipset.add(source_ip)
+        
+        subject = f"Risk score greater than 50 for ip: {result.get('source_ip')}"
+        body = f"{result}"
+        send_email(subject=subject, body=body, to_email="example@gmail.com")
+        
+        
     
     processing_time = time.time() - start_time
     logger.info(f"Analysis complete - ID: {threat_id}, User: {user_data['user_id']}, Risk Score: {risk_score}, Time: {processing_time:.2f}s")
