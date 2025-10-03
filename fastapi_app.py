@@ -34,10 +34,12 @@ if root not in sys.path:
     sys.path.insert(0, root)
 
 try:
-    from services.detection_service import analyze, threat_db
+    from services.detection_service import ThreatDetectionEngine
 except Exception as e:
     logger.warning(f"Detection module import failed: {e}")
+    
 
+        
 
 	    
 	    
@@ -111,6 +113,7 @@ app.add_middleware(
     allowed_hosts=['localhost', '127.0.0.1', '*.yourdomain.com']
 )
 
+threat_db = ThreatDetectionEngine()
 
 class ThreatAnalysisRequest(BaseModel):
     log_data: str = Field(..., description='Raw Log Data')
@@ -197,6 +200,7 @@ async def rate_limit_check(user_data: dict = Depends(verify_jwt_token)):
 @app.on_event("startup")
 async def startup():
     global redis_client
+    global threat_db
     try:
         redis_client = await redis.from_url("redis://localhost:6379", decode_responses=True)
         await redis_client.ping()
@@ -204,6 +208,11 @@ async def startup():
     except Exception as e:
         logger.error(f"Redis connection failed: {e}")
         raise
+    try:
+	    await threat_db.init_pool()
+	    logger.info("Threat DB pool successful")
+    except Exception as e:
+	    logger.warning(f"{e}")
 
 
 @app.on_event("shutdown")
@@ -289,50 +298,42 @@ async def create_api_token(request: APIKeyRequest):
 
 @app.post("/api/v1/threats/analyze", response_model=ThreatResponse, tags=['Threat Detection'])
 async def analyze_threat(request: ThreatAnalysisRequest, user_data: dict = Depends(rate_limit_check)):
+
     threat_id = str(uuid.uuid4())
     start_time = time.time()
-    
-    result = analyze(request.log_data)
+
+    # Correct call with all required arguments
+    result = await threat_db.analyze(
+        log_data=request.log_data,
+        source_ip=request.source_ip,
+        metadata=request.metadata or {}
+    )
+
+    # Fallback if analyze returns None
     if result is None:
         logger.warning("No log analysis result")
-        result = {}
-    
-    risk_score = result.get('score', 0.0)
-    threat_type = result.get('threat', 'unknown')
-    severity = result.get('severity', 'UNKNOWN')
-    confidence = result.get('confidence', 0.0)
-    
-    recommendations = []
-    if risk_score > 50:
-        recommendations = [
-            'Quarantine affected system immediately',
-            'Run full antivirus scan',
-            'Check for lateral movement',
-            'Review user access logs'
-        ]
-        source_ip = result.get('source_ip')
-        if source_ip:
-            ipset.add(source_ip)
-        
-        subject = f"Risk score greater than 50 for ip: {result.get('source_ip')}"
-        body = f"{result}"
-        send_email(subject=subject, body=body, to_email="example@gmail.com")
-        
-        
-    
-    processing_time = time.time() - start_time
-    logger.info(f"Analysis complete - ID: {threat_id}, User: {user_data['user_id']}, Risk Score: {risk_score}, Time: {processing_time:.2f}s")
-    
+        result = {
+            "risk_score": 0.0,
+            "threat_type": "unknown",
+            "confidence": 0.0,
+            "severity": "low",
+            "recommendations": []
+        }
+
+    # Construct response
     response = ThreatResponse(
         threat_id=threat_id,
-        risk_score=risk_score,
-        threat_type=threat_type,
-        severity=severity,
-        confidence=confidence,
-        recommendations=recommendations
+        risk_score=result.get("risk_score", 0.0),
+        threat_type=result.get("threat_type", "unknown"),
+        confidence=result.get("confidence", 0.0),
+        severity=result.get("severity", "low"),
+        recommendations=result.get("recommendations", []),
+        created_at=datetime.utcnow()
     )
-    
-    await redis_client.setex(f"threat:{threat_id}", 3600, response.json())
+
+    elapsed = time.time() - start_time
+    logger.info(f"Threat analyzed: {threat_id} in {elapsed:.3f}s")
+
     return response
 
 
@@ -352,9 +353,11 @@ async def threat_list(
 ):
     async with threat_db.pool.acquire() as conn:
         rows = await conn.fetch("""
-            SELECT id, ip, threat, severity, score, confidence, timestamp
-            FROM events
-            ORDER BY timestamp DESC
+            SELECT id, source_ip, threat_type, severity, risk_score, confidence, 
+                     matched_rules, rule_categories, recommendations, processing_time_ms,
+                     ml_enabled, ml_score, created_at, updated_at
+            FROM threat_detections 
+            ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
         """, limit, offset)
     
