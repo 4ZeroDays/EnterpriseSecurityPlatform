@@ -17,11 +17,7 @@ print("=" * 60)
 
 os.makedirs("models", exist_ok=True)
 
-# ============================================
-# Extended Training Dataset (200+ samples)
-# ============================================
 
-# BENIGN traffic (100 samples)
 benign_logs = [
     # API requests
     "GET /api/health HTTP/1.1", "GET /api/status HTTP/1.1",
@@ -78,11 +74,10 @@ benign_logs = [
     "GET /api/files/document.pdf HTTP/1.1",
     "POST /api/export format=csv",
     "GET /api/reports/monthly HTTP/1.1",
-] * 2  # Duplicate to get ~100 samples
+] * 2  
 
-# MALICIOUS traffic (100+ samples)
 malicious_logs = [
-    # SQL Injection (various techniques)
+    # SQL Injection 
     "GET /api/users?id=1' OR '1'='1'--",
     "POST /login username=admin' OR 1=1-- password=x",
     "GET /products?id=1 UNION SELECT username,password FROM users--",
@@ -96,7 +91,7 @@ malicious_logs = [
     "GET /api/users?id=1' AND '1'='1' AND '1",
     "GET /page?id=1 AND 1=CONVERT(int, (SELECT TOP 1 name FROM sysobjects WHERE xtype='u'))",
     
-    # XSS Attacks (stored, reflected, DOM-based)
+    # XSS Attacks 
     "POST /comment body=<script>alert('XSS')</script>",
     "GET /search?q=<script>document.location='http://evil.com'</script>",
     "POST /profile name=<img src=x onerror=alert(1)>",
@@ -193,9 +188,7 @@ X_train_text, X_test_text, y_train, y_test = train_test_split(
 print(f"   Training set: {len(X_train_text)}")
 print(f"   Test set: {len(X_test_text)}")
 
-# ============================================
-# Train TF-IDF Vectorizer
-# ============================================
+
 print("\n🔧 Training TF-IDF Vectorizer...")
 
 vectorizer = TfidfVectorizer(
@@ -205,7 +198,7 @@ vectorizer = TfidfVectorizer(
     min_df=1,
     max_df=0.95,
     lowercase=True,
-    sublinear_tf=True  # Use log scaling
+    sublinear_tf=True  
 )
 
 X_train = vectorizer.fit_transform(X_train_text)
@@ -215,9 +208,7 @@ print(f"   ✅ Features: {X_train.shape[1]}")
 joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
 print(f"   ✅ Saved: models/tfidf_vectorizer.pkl")
 
-# ============================================
-# Train Isolation Forest (Unsupervised)
-# ============================================
+
 print("\n🔧 Training Isolation Forest...")
 
 iso_forest = IsolationForest(
@@ -234,13 +225,11 @@ print(f"   ✅ Saved: models/anomaly_model.pkl")
 
 # Evaluate
 y_pred_iso = iso_forest.predict(X_test)
-y_pred_iso = [1 if p == -1 else 0 for p in y_pred_iso]  # Convert -1/1 to 1/0
+y_pred_iso = [1 if p == -1 else 0 for p in y_pred_iso]  
 accuracy_iso = sum(p == l for p, l in zip(y_pred_iso, y_test)) / len(y_test)
 print(f"   Accuracy: {accuracy_iso * 100:.1f}%")
 
-# ============================================
-# Train Random Forest (Supervised) - Bonus
-# ============================================
+
 print("\n🔧 Training Random Forest Classifier (Supervised)...")
 
 rf = RandomForestClassifier(
@@ -263,9 +252,7 @@ print(f"   Accuracy: {accuracy_rf * 100:.1f}%")
 cv_scores = cross_val_score(rf, X_train, y_train, cv=5)
 print(f"   Cross-val accuracy: {cv_scores.mean() * 100:.1f}% (+/- {cv_scores.std() * 100:.1f}%)")
 
-# ============================================
-# Detailed Evaluation
-# ============================================
+
 print("\n📊 Model Comparison:")
 print(f"   Isolation Forest: {accuracy_iso * 100:.1f}%")
 print(f"   Random Forest:    {accuracy_rf * 100:.1f}%")
@@ -280,9 +267,7 @@ print(f"   False Positives: {cm[0][1]}")
 print(f"   False Negatives: {cm[1][0]}")
 print(f"   True Positives:  {cm[1][1]}")
 
-# ============================================
-# Test Examples
-# ============================================
+
 print("\n🧪 Testing on New Examples:")
 
 test_examples = [
