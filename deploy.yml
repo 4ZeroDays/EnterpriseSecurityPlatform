@@ -1,0 +1,27 @@
+# .github/workflows/deploy.yml
+name: Deploy Detection Service
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: pytest tests/ --cov
+      - name: Security scan
+        run: bandit -r services/
+  
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Docker image
+        run: docker build -t detection-service:${{ github.sha }} .
+      - name: Push to registry
+        run: docker push detection-service:${{ github.sha }}
+      - name: Deploy to k8s
+        run: kubectl set image deployment/detection-service detection-service=detection-service:${{ github.sha }}

@@ -1,0 +1,31 @@
+# k8s/detection-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: detection-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: detection-service
+  template:
+    metadata:
+      labels:
+        app: detection-service
+    spec:
+      containers:
+      - name: detection-service
+        image: your-registry/detection-service:v1
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: url
