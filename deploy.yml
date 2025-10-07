@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml
+
 name: Deploy Detection Service
 
 on:
