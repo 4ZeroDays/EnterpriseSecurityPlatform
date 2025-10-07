@@ -6,7 +6,10 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[🎥 Live Demo](https://youtu.be/n2KPhKYm2jc?si=MqQISujQT_Stuqx9) | [📊 Dashboard](https://enterprise-security-platform.vercel.app/) | [📖 Documentation](docs/)
+[🎥 Live Demo](https://youtu.be/n2KPhKYm2jc?si=MqQISujQT_Stuqx9) | [📊 Dashboard](https://enterprise-security-platform.vercel.app/) | [📖 Documentation](- [Architecture Guide](ARCHITECTURE.md) - System design details
+- [Deployment Guide](DEPLOYMENT.md) - Production deployment
+- [ML Models](ML_MODELS.md) - Model training and evaluation)
+
 
 ---
 
