@@ -9,25 +9,25 @@
 └────────┬────────┘
 
 ┌────────▼────────┐
-│  API Gateway    │ ← FastAPI (Port 8000)
+│  API Gateway    │
 │  - Auth (JWT)   │
 │  - Rate Limit   │
 └────────┬────────┘
 
 ┌────────▼────────┐
-│  Redis Queue    │ ← Message Broker
+│  Redis Queue    │ 
 │  - Batching     │
 │  - Caching      │
 └────────┬────────┘
 
 ┌────────▼────────┐
-│ Detection Svc   │ ← ML Analysis
+│ Detection Svc   │ 
 │ - IsolationFor. │
 │ - RandomForest  │
 └────────┬────────┘
 
 ┌────────▼────────┐
-│  PostgreSQL     │ ← Persistent Storage
+│  PostgreSQL     │ 
 │  - Threats      │
 │  - Rules        │
 └─────────────────┘
