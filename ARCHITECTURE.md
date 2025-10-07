@@ -7,25 +7,25 @@
 │  Client Apps    │
 │  (SIEM, SOC)    │
 └────────┬────────┘
-│
+
 ┌────────▼────────┐
 │  API Gateway    │ ← FastAPI (Port 8000)
 │  - Auth (JWT)   │
 │  - Rate Limit   │
 └────────┬────────┘
-│
+
 ┌────────▼────────┐
 │  Redis Queue    │ ← Message Broker
 │  - Batching     │
 │  - Caching      │
 └────────┬────────┘
-│
+
 ┌────────▼────────┐
 │ Detection Svc   │ ← ML Analysis
 │ - IsolationFor. │
 │ - RandomForest  │
 └────────┬────────┘
-│
+
 ┌────────▼────────┐
 │  PostgreSQL     │ ← Persistent Storage
 │  - Threats      │
