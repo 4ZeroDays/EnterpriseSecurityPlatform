@@ -1,12 +1,12 @@
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Get token from localStorage (you'll need to implement login to set this)
+/
 const getAuthToken = () => {
   return localStorage.getItem('auth_token');
 };
 
-// Helper function for authenticated requests
+
 const authenticatedFetch = async (url, options = {}) => {
   const token = getAuthToken();
   
@@ -56,10 +56,9 @@ export const fetchLogs = async (limit = 10, offset = 0) => {
   }
 };
 
-// Fetch dashboard statistics
+
 export const fetchStats = async () => {
   try {
-    // Get threats list to calculate stats
     const threats = await authenticatedFetch(`${API_BASE_URL}/api/v1/threats/?limit=100&offset=0`);
     
     const highSeverityThreats = threats.filter(t => 
@@ -71,7 +70,7 @@ export const fetchStats = async () => {
     ).length;
 
     return {
-      users: 120, // You can add a users endpoint to your backend
+      users: 120, 
       threats: highSeverityThreats,
       alerts: activeAlerts,
     };
@@ -92,7 +91,7 @@ export const fetchHealth = async () => {
     const response = await fetch(`${API_BASE_URL}/health`);
     const health = await response.json();
     
-    // Transform health data to match frontend format
+    
     return {
       cpu: health.components?.redis === 'healthy' ? '45%' : '85%',
       memory: health.components?.database === 'healthy' ? '65%' : '90%',
