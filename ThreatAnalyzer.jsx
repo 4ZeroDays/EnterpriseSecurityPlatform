@@ -13,7 +13,7 @@ export default function ThreatAnalyzer() {
     setResult(null);
 
     try {
-      // Sample threat analysis - you can customize these values
+
       const response = await analyzeThreat(
         "Sample log entry with suspicious activity",
         "192.168.1.100",
