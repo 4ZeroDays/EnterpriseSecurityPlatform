@@ -1,9 +1,12 @@
-# 🛡️ Enterprise Security Platform - Microservices Architecture (STILL IN DEVLOPMENT ) :)
+# 🛡️ Enterprise Security Platform - Microservices Architecture 
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+DEMO VIDEO:
+         ![Demo](1.mp4)
 
 > **Phase 6 Capstone Project**: Enterprise-grade threat detection platform built with microservices architecture, designed for real-world SIEM integration and production deployment.
 
