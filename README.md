@@ -6,7 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 DEMO VIDEO:
-         ![Demo](1.mp4)
+         [![DEMO!](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://youtu.be/n2KPhKYm2jc?si=by_EelduaJLzmS46)
+
 
 > **Phase 6 Capstone Project**: Enterprise-grade threat detection platform built with microservices architecture, designed for real-world SIEM integration and production deployment.
 
