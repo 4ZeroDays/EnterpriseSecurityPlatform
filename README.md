@@ -133,14 +133,7 @@ uvicorn services.ingestion_service:app --reload --port 9000 &
 
 # Start Dashboard
 streamlit run dashboard/security_dashboard.py
-```
 
-### 3. Access Services
-- **Dashboard:** http://localhost:8501
-- **API Docs:** http://localhost:8000/docs
-- **Metrics:** http://localhost:8000/metrics
-
----
 
 ## 📊 Performance Benchmarks
 
