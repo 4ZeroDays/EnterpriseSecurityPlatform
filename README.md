@@ -258,9 +258,9 @@ python scripts/generate_test_threats.py --count 1000
 ## 📚 Documentation
 
 - [API Documentation](http://localhost:8000/docs) - Interactive API docs
-- [Architecture Guide](docs/ARCHITECTURE.md) - System design details
-- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
-- [ML Models](docs/ML_MODELS.md) - Model training and evaluation
+- [Architecture Guide](ARCHITECTURE.md) - System design details
+- [Deployment Guide](DEPLOYMENT.md) - Production deployment
+- [ML Models](ML_MODELS.md) - Model training and evaluation
 
 ---
 
