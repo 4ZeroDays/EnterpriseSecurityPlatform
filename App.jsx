@@ -11,7 +11,7 @@ import AlertInspector from "./components/AlertInspector";
 import { Layers, List } from "lucide-react";
 
 export default function App() {
-  const [viewMode, setViewMode] = useState("dashboard"); // dashboard, threatmap, inspector
+  const [viewMode, setViewMode] = useState("dashboard"); 
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
