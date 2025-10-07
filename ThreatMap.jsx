@@ -17,7 +17,7 @@ export default function ThreatMap() {
 
   const franceCenter = [46.603354, 1.888334];
 
-  // Example threat data with coordinates
+  
   const threats = [
     {
       id: 1,
