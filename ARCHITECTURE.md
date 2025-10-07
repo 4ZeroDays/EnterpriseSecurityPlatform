@@ -2,7 +2,7 @@
 
 ## System Design
 
-### High-Level Architecture
+###  Architecture
 ┌─────────────────┐
 │  Client Apps    │
 │  (SIEM, SOC)    │
