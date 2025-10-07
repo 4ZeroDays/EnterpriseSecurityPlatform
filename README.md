@@ -41,7 +41,7 @@ An **enterprise-grade security operations platform** that detects threats in rea
 
 ## 🎬 Quick Demo
 
-![Dashboard Overview](screenshots/dashboard.gif)
+![Dashboard Overview](https://enterprise-security-platform.vercel.app/)
 
 ### Live Threat Detection
 ```bash
@@ -132,7 +132,7 @@ python services/detection_service.py &
 uvicorn services.ingestion_service:app --reload --port 9000 &
 
 # Start Dashboard
-streamlit run dashboard/security_dashboard.py
+npm run dev 
 
 
 ## 📊 Performance Benchmarks
@@ -276,7 +276,7 @@ kubectl apply -f k8s/
 ```
 
 ### Manual Deployment
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed instructions.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ---
 
@@ -302,13 +302,8 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 Built as part of the Advanced Security Infrastructure Roadmap (Phase 6)
 
-**Technologies:**
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
-- [scikit-learn](https://scikit-learn.org/) - ML algorithms
-- [Streamlit](https://streamlit.io/) - Dashboard framework
-- [Prometheus](https://prometheus.io/) - Monitoring
 
----
+
 
 ## 📊 Project Stats
 
