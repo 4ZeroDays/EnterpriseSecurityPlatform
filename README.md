@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 DEMO VIDEO:
-         [![DEMO!](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://youtu.be/n2KPhKYm2jc?si=by_EelduaJLzmS46)
+         [![DEMO!](https://youtu.be/n2KPhKYm2jc?si=by_EelduaJLzmS46)
 
 
 
