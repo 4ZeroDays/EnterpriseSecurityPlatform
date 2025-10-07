@@ -41,7 +41,7 @@ An **enterprise-grade security operations platform** that detects threats in rea
 
 ## 🎬 Quick Demo
 
-![Dashboard Overview](https://enterprise-security-platform.vercel.app/)
+
 
 ### Live Threat Detection
 ```bash
