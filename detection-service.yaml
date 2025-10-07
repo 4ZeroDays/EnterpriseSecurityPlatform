@@ -1,4 +1,4 @@
-# k8s/detection-service.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
