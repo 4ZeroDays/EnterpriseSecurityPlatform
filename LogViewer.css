@@ -1,0 +1,33 @@
+.log-viewer {
+  background: #1e293b;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.log-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: #0f172a;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  transition: background 0.2s ease;
+}
+.log-item:hover {
+  background: #334155;
+}
+
+.timestamp {
+  color: #94a3b8;
+}
+.message {
+  color: #f1f5f9;
+}
+
