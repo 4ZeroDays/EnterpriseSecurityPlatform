@@ -6,7 +6,7 @@ import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 
-// 🧩 Fix for Leaflet marker icon not loading properly in Vite/React
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl,
@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function ThreatMap() {
-  // Center of France
+
   const franceCenter = [46.603354, 1.888334];
 
   // Example threat data with coordinates
@@ -58,7 +58,7 @@ export default function ThreatMap() {
         className="h-full w-full"
       >
         <TileLayer
-          // dark tile theme — you can replace with any tile URL
+          
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         />
