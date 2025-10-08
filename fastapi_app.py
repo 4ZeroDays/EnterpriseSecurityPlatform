@@ -83,7 +83,7 @@ def ipset_remove(ip: str, set_name="blocked_ips"):
 
 jwt_secret = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 jwt_algorithm = 'HS256'
-jwt_expiration_hours = 24
+jwt_expiration_hours = 24 * 365 #for github dashboard
 
 redis_client = None
 security = HTTPBearer()
@@ -289,8 +289,8 @@ async def create_api_token(request: APIKeyRequest):
     logger.info(f"API Token created for user: {request.user_id}")
     
     return {
-		#placeholder acess token for dashboard
-        "access_token": 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiWU9VUl9VU0VSX0lEIiwicGVybWlzc2lvbnMiOlsicmVhZCIsIndyaXRlIl0sImV4cCI6MTc1OTgwNzg3OSwiaWF0IjoxNzU5NzIxNDc5fQ.aTPp49zcQTS5JaVXysE7911vexta_IGuNGwsSaBe3kg'
+		
+        "access_token":token,
         "token_type": "bearer",
         "expires_in": jwt_expiration_hours * 3600,
         "permissions": request.permissions
