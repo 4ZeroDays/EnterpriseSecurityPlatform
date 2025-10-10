@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjQ5aTBjaWs2ZmRjMDFiZWY1N3Z6aDI0bm5udHRwN2ZsNTR2cnh4MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/09dtSzZe91TSiewEpT/giphy.gif" alt="Glowing Star" width="100">
+  <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExb25wdG83eDZ1dWh2a2hhZ3VkbWpueXY5ZXRpN2t3eGtwZDEzOHpudyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/RpfIXomvjCh8I/giphy.gif" alt="Glowing Star" width="100">
   <br>
   <b>⭐ Please Star this Repo if You Enjoy It! ⭐</b>
 </p>
