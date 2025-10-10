@@ -1,5 +1,5 @@
 # 🛡️ Enterprise Security Platform
-[![GitHub stars](https://img.shields.io/github/stars/username/repo?style=social)](https://github.com/username/repo/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/4ZeroDays/repo?style=social)](https://github.com/4ZeroDays/EnterpriseSecurityPlatform/stargazers)
 > **Production-grade threat detection platform processing 10,000+ logs/second with ML-powered analysis**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
