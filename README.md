@@ -1,5 +1,11 @@
+<p align="center">
+  <img src="https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" alt="Glowing Star" width="50">
+  <b> Please ⭐ Star this repo if you enjoy it! </b>
+  <img src="https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" alt="Glowing Star" width="50">
+</p>
+
 # 🛡️ Enterprise Security Platform
-[![GitHub star]
+
 > **Production-grade threat detection platform processing 10,000+ logs/second with ML-powered analysis**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
