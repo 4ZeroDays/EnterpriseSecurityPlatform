@@ -16,7 +16,7 @@
 ## Demo Video Of Dashboard.
 [🎥 Live Demo](https://youtu.be/n2KPhKYm2jc?si=MqQISujQT_Stuqx9) | 
 ## TLDR: Token Expires Every 24hs need auth token to acess! Changed so anyone can acess without token for now but version limited
-[📊 Dashboard](enterprise-security-platform-5xunwtipv-shaid-ts-projects.vercel.app)
+[📊 Dashboard](https://enterprise-security-platform-j4izw5go6-shaid-ts-projects.vercel.app)
 ## 📖 Documentation
 - [Architecture Guide](ARCHITECTURE.md) — System design details  
 - [Deployment Guide](DEPLOYMENT.md) — Production deployment  
