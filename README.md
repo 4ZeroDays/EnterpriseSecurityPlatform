@@ -1,8 +1,9 @@
 <p align="center">
-  <img src="https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" alt="Glowing Star" width="50">
-  <b> Please ⭐ Star this repo if you enjoy it! </b>
-  <img src="https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" alt="Glowing Star" width="50">
+  <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjQ5aTBjaWs2ZmRjMDFiZWY1N3Z6aDI0bm5udHRwN2ZsNTR2cnh4MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/09dtSzZe91TSiewEpT/giphy.gif" alt="Glowing Star" width="100">
+  <br>
+  <b>⭐ Please Star this Repo if You Enjoy It! ⭐</b>
 </p>
+
 
 # 🛡️ Enterprise Security Platform
 
