@@ -22,7 +22,6 @@ from redis.asyncio.connection import ConnectionPool
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Configuration
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://threat_user:supersecret@localhost:5432/security_platform")
 REDIS_MAX_CONNECTIONS = int(os.getenv("REDIS_MAX_CONNECTIONS", "50"))
@@ -40,14 +39,13 @@ IPSET_TIMEOUT = int(os.getenv("IPSET_TIMEOUT", "2"))
 BLOCKED_IP_CACHE_TTL = int(os.getenv("BLOCKED_IP_CACHE_TTL", "300"))
 MAX_RETRY_BACKOFF = int(os.getenv("MAX_RETRY_BACKOFF", "300"))
 
-# Configure structured logging
+
 logging.basicConfig(
     level=logging.INFO,
     format='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "service": "detection-engine", "message": "%(message)s"}'
 )
 logger = logging.getLogger(__name__)
 
-# Prometheus metrics
 redis_up = Gauge("redis_up", "Status of the Redis connection (1=up, 0=down)")
 db_up = Gauge("db_up", "Status of the database connection (1=up, 0=down)")
 redis_response_time = Histogram("redis_response_time_seconds", "Response time for Redis check")
@@ -72,7 +70,7 @@ worker_instance: Optional['DetectionServiceWorker'] = None
 
 # Pydantic models
 class DetectionJobPayload(BaseModel):
-    """Validated detection job payload."""
+    
     threat_id: str = Field(..., min_length=1, max_length=255)
     log_data: str = Field(..., min_length=1)
     source_ip: str = Field(..., pattern=r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$")
@@ -88,7 +86,7 @@ class DetectionJobPayload(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    """Health check response."""
+  
     status: str
     redis_connected: bool
     db_connected: bool
@@ -97,7 +95,7 @@ class HealthResponse(BaseModel):
 
 
 def load_ml_models():
-    """Load ML models from disk."""
+    
     try:
         model_path = os.getenv("MODEL_PATH", "models")
         isolation_model, random_forest_model, vectorizer = None, None, None
@@ -135,7 +133,7 @@ isolation_model, random_forest_model, vectorizer = load_ml_models()
 
 
 class ThreatDetectionEngine:
-    """Core detection engine with rule-based and ML-based analysis."""
+  
     
     def __init__(self):
         self.rules = self._load_detection_rules()
@@ -148,7 +146,7 @@ class ThreatDetectionEngine:
         self.pool = await asyncpg.create_pool(DATABASE_URL) 
     
     def _load_detection_rules(self) -> List[Dict[str, Any]]:
-        """Load detection rules with enhanced patterns."""
+        
         return [
             {
                 "id": "SQL_INJECTION",
@@ -209,7 +207,7 @@ class ThreatDetectionEngine:
         ]
     
     async def analyze(self, log_data: str, source_ip: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze log data for threats."""
+        
         start_time = time.time()
         self._stats["total_analyzed"] += 1
         log_analyzed_total.inc()
@@ -218,7 +216,7 @@ class ThreatDetectionEngine:
         total_score = 0.0
         log_lower = log_data.lower()
         
-        # Rule-based detection
+        
         for rule in self.rules:
             try:
                 if re.search(rule["pattern"], log_lower, re.IGNORECASE):
@@ -230,7 +228,7 @@ class ThreatDetectionEngine:
         
         matched_rules_count.set(len(matched_rules))
         
-        # ml based detection
+    
         ml_risk_score = 0.0
         if self.ml_enabled:
             try:
@@ -242,7 +240,7 @@ class ThreatDetectionEngine:
         
         ml_score_gauge.set(ml_risk_score)
         
-        # Calculate final risk score
+        
         risk_score = max(min(total_score, 100.0), 0.0)
         risk_score_gauge.set(risk_score)
         
@@ -279,7 +277,7 @@ class ThreatDetectionEngine:
         }
     
     async def _ml_anomaly_detection(self, log_data: str, source_ip: str) -> float:
-        #Perform ML-based anomaly detection with configurable weights
+        
         try:
             loop = asyncio.get_event_loop()
             
@@ -318,7 +316,7 @@ class ThreatDetectionEngine:
             return 0.0
     
     def _classify_threat(self, matched_rules: List[Dict], risk_score: float) -> tuple:
-        #Classify threat type, severity, and confidence.
+        
         if not matched_rules:
             return "BENIGN", "LOW", 0.15
         
@@ -334,7 +332,7 @@ class ThreatDetectionEngine:
         return threat_type, severity, confidence
     
     def _generate_recommendations(self, risk_score: float, matched_rules: List[Dict], metadata: Dict[str, Any]) -> List[str]:
-        #Generate contextual security recommendations.
+        
         recommendations = []
         
         if risk_score >= 80:
@@ -407,7 +405,7 @@ class DetectionServiceWorker:
         self._pending_jobs: List[DetectionJobPayload] = []
     
     async def start(self):
-        """Initialize connections and start processing."""
+       
         logger.info("🚀 Detection Service starting up...")
         
         self.redis_pool = ConnectionPool.from_url(
@@ -448,7 +446,7 @@ class DetectionServiceWorker:
         self._worker_task = asyncio.create_task(self.process_queue())
     
     async def _initialize_db_schema(self):
-        """Ensure database schema exists."""
+       
         if not self.db_pool:
             return
         
@@ -484,7 +482,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to initialize schema: {e}")
     
     async def process_queue(self):
-        """Main queue processing loop with batch support."""
+        
         logger.info("👂 Listening for detection jobs...")
         batch_start_time = time.time()
         
@@ -519,7 +517,7 @@ class DetectionServiceWorker:
                     batch_start_time = current_time
                     batch_processed_total.inc()
                 
-                # Small sleep after timeout to reduce cpu churn
+               
                 if not job_key:
                     await asyncio.sleep(0.1)
                 
@@ -531,7 +529,7 @@ class DetectionServiceWorker:
                 await asyncio.sleep(1)
     
     async def _process_batch(self, jobs: List[DetectionJobPayload]):
-        #Process a batch of jobs concurrently.
+       
         if not jobs:
             return
         
@@ -540,7 +538,7 @@ class DetectionServiceWorker:
         await asyncio.gather(*tasks, return_exceptions=True)
     
     async def process_detection_job(self, job: DetectionJobPayload):
-        #Process a single detection job.
+        
         logger.info(f"🔍 Processing detection job: {job.threat_id} from {job.source_ip}")
         
         try:
@@ -549,7 +547,7 @@ class DetectionServiceWorker:
             if is_blocked:
                 job.metadata["repeat_offender"] = True
             
-            # Perform threat analysis
+            
             result = await self.engine.analyze(job.log_data, job.source_ip, job.metadata)
             
             
@@ -559,7 +557,7 @@ class DetectionServiceWorker:
                 return_exceptions=True
             )
             
-            # Publish alert with rate limiting
+          
             if result["risk_score"] >= ALERT_THRESHOLD:
                 await self._publish_alert_with_ratelimit(job.threat_id, job.source_ip, result)
             
@@ -595,11 +593,11 @@ class DetectionServiceWorker:
                 await proc.wait()
                 is_blocked = False
             
-            # Cache result
+            
             self._blocked_ip_cache[source_ip] = is_blocked
             self._blocked_ip_cache_times[source_ip] = current_time
             
-            # Evict old cache entries
+            
             if len(self._blocked_ip_cache) > 10000:
                 self._evict_old_cache_entries()
             
@@ -612,7 +610,7 @@ class DetectionServiceWorker:
             return False
     
     def _evict_old_cache_entries(self):
-        #evict oldest 20% of cache entries
+        
         current_time = time.time()
         sorted_entries = sorted(
             self._blocked_ip_cache_times.items(),
@@ -625,7 +623,7 @@ class DetectionServiceWorker:
         logger.info(f"Evicted {evict_count} old cache entries")
     
     async def _store_in_db(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        #store detection result in PostgreSQL with full field updates
+        
         if not self.db_pool:
             return
         
@@ -659,7 +657,7 @@ class DetectionServiceWorker:
             logger.error(f"Failed to store result in DB: {e}")
     
     async def _cache_result(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        """Cache detection result in Redis."""
+       
         try:
             cache_data = {"threat_id": threat_id, "source_ip": source_ip, **result}
             cache_key = f"threat:{threat_id}:{source_ip}"
@@ -668,20 +666,20 @@ class DetectionServiceWorker:
             logger.error(f"Failed to cache result: {e}")
     
     async def _publish_alert_with_ratelimit(self, threat_id: str, source_ip: str, result: Dict[str, Any]):
-        #Publish alert with per-IP rate limiting and deduplication.
+       
         current_time = time.time()
         
-        # Check cooldown
+        
         last_alert_time = self._alert_cooldowns.get(source_ip, 0)
         if current_time - last_alert_time < ALERT_COOLDOWN_SECONDS:
             alert_rate_limited_total.inc()
             logger.debug(f"Alert rate-limited for {source_ip} (cooldown: {ALERT_COOLDOWN_SECONDS}s)")
             return
         
-        # Update cooldown
+        
         self._alert_cooldowns[source_ip] = current_time
         
-        # Clean up old cooldowns keep last 1000
+     
         if len(self._alert_cooldowns) > 1000:
             sorted_cooldowns = sorted(self._alert_cooldowns.items(), key=lambda x: x[1])
             self._alert_cooldowns = dict(sorted_cooldowns[-1000:])
@@ -706,23 +704,23 @@ class DetectionServiceWorker:
             elif result['severity'] == 'CRITICAL':
                 logger.critical(f"🚨 CRITICAL SEVERITY ALERT: {threat_id} - {source_ip} - Score: {result['risk_score']}")
                 
-                # Optional: Send external alerts (email, Slack, PagerDuty)
+                
                 await self._send_external_alert(alert)
         except Exception as e:
             logger.error(f"Failed to publish alert: {e}")
     
     async def _send_external_alert(self, alert: Dict[str, Any]):
-      #already added but in different file can add here for sending additional info 
-        pass #placeholder
+      
+        pass 
     
     async def _enqueue_retry(self, job: DetectionJobPayload):
-        #enqueue failed job for retry with capped exponential backoff.
+       
         try:
             max_retries = 10
             base_backoff = 2
             
             if job.retry_count < max_retries:
-                # Cap backoff at MAX_RETRY_BACKOFF
+               
                 backoff = min(base_backoff ** job.retry_count, MAX_RETRY_BACKOFF)
                 logger.info(f"Retrying job {job.threat_id} attempt {job.retry_count + 1} after {backoff}s")
                 await asyncio.sleep(backoff)
